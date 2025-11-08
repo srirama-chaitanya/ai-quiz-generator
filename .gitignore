@@ -1,0 +1,13 @@
+# Python virtual environment
+venv/
+
+# Secret keys
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Our temporary test files
+debug.html
+check_models.py
