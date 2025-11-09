@@ -69,8 +69,8 @@ function App() {
       setUserAnswers(new Array(data.quiz.length).fill(null));
       loadHistory(); // Refresh history list
       
-      // --- HERE IS THE OPTIMIZATION ---
-      setUrl(''); // Clear the URL from the search bar on success
+      // --- OPTIMIZATION: Clear URL on success ---
+      setUrl(''); 
       // --- END OF OPTIMIZATION ---
 
     } catch (err) {
@@ -89,11 +89,16 @@ function App() {
 
   const handleSubmitQuiz = () => {
     let correctAnswers = 0;
+    
+    // --- THIS IS THE FIX ---
+    // We must compare the user's answer to the *quiz's* correct answer
     for (let i = 0; i < quizData.quiz.length; i++) {
-      if (userAnswers[i] === quizData.quiz.length) {
+      if (userAnswers[i] === quizData.quiz[i].answer) {
         correctAnswers++;
       }
     }
+    // --- END OF FIX ---
+    
     setScore(correctAnswers);
     setShowResults(true);
     setError(null); // Clear any validation errors
