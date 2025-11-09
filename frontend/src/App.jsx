@@ -67,12 +67,11 @@ function App() {
       const data = await generateQuiz(url);
       setQuizData(data);
       setUserAnswers(new Array(data.quiz.length).fill(null));
-      loadHistory(); // Refresh history list
       
-      // --- OPTIMIZATION: Clear URL on success ---
-      setUrl(''); 
-      // --- END OF OPTIMIZATION ---
+      // We no longer refresh history here.
+      // loadHistory(); 
 
+      setUrl(''); // Clear the URL from the search bar on success
     } catch (err) {
       setError(err.message || 'An unknown error occurred.');
     } finally {
@@ -91,7 +90,6 @@ function App() {
     let correctAnswers = 0;
     
     // --- THIS IS THE FIX ---
-    // We must compare the user's answer to the *quiz's* correct answer
     for (let i = 0; i < quizData.quiz.length; i++) {
       if (userAnswers[i] === quizData.quiz[i].answer) {
         correctAnswers++;
@@ -102,6 +100,10 @@ function App() {
     setScore(correctAnswers);
     setShowResults(true);
     setError(null); // Clear any validation errors
+
+    // --- THIS IS THE CHANGE ---
+    // Refresh the history list *after* the user submits the quiz.
+    loadHistory();
   };
   
   // --- Handlers for HistoryTab (Lifted Up) ---
