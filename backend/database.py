@@ -37,7 +37,7 @@ class Quiz(Base):
     # Define the columns for our table
     id = Column(Integer, primary_key=True, index=True)
     
-    url = Column(String(1024), nullable=False, unique=True, index=True)
+    url = Column(String(1024), nullable=False, unique=False, index=True)
     
     title = Column(String(255), nullable=False)
     
