@@ -1,13 +1,20 @@
 # Python virtual environment
 venv/
+backend/venv/
 
 # Secret keys
 .env
+backend/.env
 
 # Python cache
 __pycache__/
+backend/__pycache__/
 *.pyc
 
 # Our temporary test files
 debug.html
 check_models.py
+
+# Node.js
+node_modules/
+frontend/node_modules/
