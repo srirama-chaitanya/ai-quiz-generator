@@ -68,8 +68,10 @@ function App() {
       setQuizData(data);
       setUserAnswers(new Array(data.quiz.length).fill(null));
       
-      // We no longer refresh history here.
-      // loadHistory(); 
+      // --- THIS IS THE FIX ---
+      // Refresh the history list *immediately* after generation
+      // This is required for the caching logic to feel right.
+      loadHistory(); 
 
       setUrl(''); // Clear the URL from the search bar on success
     } catch (err) {
@@ -89,21 +91,17 @@ function App() {
   const handleSubmitQuiz = () => {
     let correctAnswers = 0;
     
-    // --- THIS IS THE FIX ---
     for (let i = 0; i < quizData.quiz.length; i++) {
       if (userAnswers[i] === quizData.quiz[i].answer) {
         correctAnswers++;
       }
     }
-    // --- END OF FIX ---
     
     setScore(correctAnswers);
     setShowResults(true);
     setError(null); // Clear any validation errors
-
-    // --- THIS IS THE CHANGE ---
-    // Refresh the history list *after* the user submits the quiz.
-    loadHistory();
+    
+    // We do NOT load history here anymore.
   };
   
   // --- Handlers for HistoryTab (Lifted Up) ---

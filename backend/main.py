@@ -48,14 +48,25 @@ def create_quiz(request: GenerateRequest, db: Session = Depends(get_db)):
     """
     The main endpoint.
     Takes a URL, scrapes it, generates a quiz, and saves it to the DB.
-    *** CACHING IS NOW REMOVED ***
+    *** CACHING IS NOW ENABLED ***
     """
     url = request.url
     print(f"Received request to generate quiz for URL: {url}")
 
-    # --- WE REMOVED THE CACHE CHECK FROM HERE ---
+    # --- OPTIMIZATION: CACHING ---
+    # Check if this URL is already in our database
+    try:
+        existing_quiz = db.query(Quiz).filter(Quiz.url == url).first()
+        if existing_quiz:
+            print("--- CACHE HIT: Returning existing quiz from DB. ---")
+            # Just parse the stored JSON and return it
+            return json.loads(existing_quiz.full_quiz_data)
+    except Exception as e:
+        # If DB query fails, just log it and proceed.
+        print(f"Cache check failed: {e}")
     
-    print("--- Generating new quiz... ---")
+    print("--- CACHE MISS: Generating new quiz. ---")
+    # --- END OF OPTIMIZATION ---
 
     # Step 1: Scrape the article
     try:
