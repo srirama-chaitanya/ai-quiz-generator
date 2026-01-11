@@ -11,30 +11,39 @@ export const QuizCard = ({ quiz, onClose, embedded = false, initialMode = 'quiz'
     const [isQuizMode, setIsQuizMode] = useState(false);
 
     // Quiz State
+    // Initialize state lazily to respect initial props on mount
+    const [isQuizMode, setIsQuizMode] = useState(initialMode === 'review');
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [userAnswers, setUserAnswers] = useState(initialAnswers);
     const [showResults, setShowResults] = useState(initialMode === 'review');
-    const [score, setScore] = useState(0);
 
-    // Initialize state based on mode
-    useEffect(() => {
+    // Calculate initial score if in review mode
+    const [score, setScore] = useState(() => {
         if (initialMode === 'review') {
-            setIsQuizMode(true); // Technically inside the "quiz view" wrapper
-            setShowResults(true);
-            // Calculate score for display
             let s = 0;
             quiz.questions.forEach(q => {
                 if (initialAnswers[q.id] === q.correct_answer) s++;
             });
-            setScore(s);
-        } else {
-            // Default: Show preview, clean state
+            return s;
+        }
+        return 0;
+    });
+
+    // Reset state only when the quiz ID changes, NOT when unstable props like initialAnswers change
+    useEffect(() => {
+        // If the quiz object ref changes, we check if ID changed significantly to warrant reset
+        // or if we rely on key to remount.
+        // Assuming key={quiz.id} is used, this effect might strictly not be needed for reset,
+        // but if key is not used or same ID is re-fetched:
+        if (initialMode !== 'review') {
+            // Only reset if NOT grounded in a specific review session
             setIsQuizMode(false);
             setShowResults(false);
             setUserAnswers({});
             setScore(0);
+            setCurrentQuestionIndex(0);
         }
-    }, [initialMode, initialAnswers, quiz]);
+    }, [quiz.id]); // Only reset if quiz ID changes. Ignore initialMode/initialAnswers changes after mount.
 
     const handleStartQuiz = () => {
         setIsQuizMode(true);
