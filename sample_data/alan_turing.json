@@ -1,0 +1,99 @@
+{
+    "id": 1,
+    "url": "https://en.wikipedia.org/wiki/Alan_Turing",
+    "title": "Alan Turing",
+    "summary": "Alan Mathison Turing OBE FRS was a British mathematician, computer scientist, logician, cryptanalyst, philosopher, and theoretical biologist. He was highly influential in the development of theoretical computer science, providing a formalisation of the concepts of algorithm and computation with the Turing machine, which can be considered a model of a general-purpose computer.",
+    "key_entities": {
+        "people": [
+            "Alan Turing",
+            "Alonzo Church",
+            "Winston Churchill"
+        ],
+        "organizations": [
+            "Government Code and Cypher School",
+            "University of Manchester",
+            "National Physical Laboratory"
+        ],
+        "locations": [
+            "Bletchley Park",
+            "United Kingdom",
+            "Wilmslow"
+        ]
+    },
+    "sections": [
+        "Early life",
+        "Education",
+        "Cryptanalysis",
+        "Turing machine",
+        "Early computers",
+        "Death"
+    ],
+    "quiz": [
+        {
+            "question": "Which machine is considered a model of a general-purpose computer?",
+            "options": [
+                "Enigma machine",
+                "Turing machine",
+                "Difference Engine",
+                "Analytical Engine"
+            ],
+            "answer": "Turing machine",
+            "difficulty": "easy",
+            "explanation": "The Turing machine provided a formalisation of the concepts of algorithm and computation."
+        },
+        {
+            "question": "Where did Turing work during the Second World War?",
+            "options": [
+                "Whitehall",
+                "Bletchley Park",
+                "Pentagon",
+                "MI6 Headquarters"
+            ],
+            "answer": "Bletchley Park",
+            "difficulty": "easy",
+            "explanation": "Turing worked for the Government Code and Cypher School (GC&CS) at Bletchley Park, Britain's codebreaking centre."
+        },
+        {
+            "question": "What specifically did the 'Bombe' machine do?",
+            "options": [
+                "Calculated missile trajectories",
+                "Deciphered German Enigma settings",
+                "Predicted weather patterns",
+                "Controlled radar systems"
+            ],
+            "answer": "Deciphered German Enigma settings",
+            "difficulty": "medium",
+            "explanation": "The Bombe was an electromechanical device used to help British cryptologists decrypt German Enigma-machine-encrypted secret messages."
+        },
+        {
+            "question": "Turing was prosecuted in 1952 for what reason?",
+            "options": [
+                "Espionage",
+                "Homosexual acts",
+                "Tax evasion",
+                "Treason"
+            ],
+            "answer": "Homosexual acts",
+            "difficulty": "medium",
+            "explanation": "Turing was prosecuted for homosexual acts, which were then a criminal offence in the UK."
+        },
+        {
+            "question": "What is the 'Turing Test' designed to assess?",
+            "options": [
+                "Computer speed",
+                "Algorithm efficiency",
+                "Machine's ability to exhibit intelligent behaviour",
+                "Code complexity"
+            ],
+            "answer": "Machine's ability to exhibit intelligent behaviour",
+            "difficulty": "hard",
+            "explanation": "The Turing test is a test of a machine's ability to exhibit intelligent behaviour equivalent to, or indistinguishable from, that of a human."
+        }
+    ],
+    "related_topics": [
+        "Enigma machine",
+        "History of artificial intelligence",
+        "Bletchley Park",
+        "Turing completeness"
+    ]
+}

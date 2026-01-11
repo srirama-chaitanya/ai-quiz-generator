@@ -1,0 +1,15 @@
+Testing Scraper with URL: https://en.wikipedia.org/wiki/Python_(programming_language)
+Success! Title: Python (programming language)
+Content length: 20000 characters
+Sections found: 11
+First 200 chars: Python is a high-level, general-purpose programming language. Its design philosophy emphasizes code readability with the use of significant indentation.[34] Python is dynamically type-checked and garb
+
+Testing LLM...
+Error generating quiz: 1 validation error for Generation
+text
+  Input should be a valid string [type=string_type, input_value=[{'type': 'text', 'text':...nUl0gLU7A25AHxtQ82MW'}}], input_type=list]
+    For further information visit https://errors.pydantic.dev/2.12/v/string_type
+LLM Failed: 1 validation error for Generation
+text
+  Input should be a valid string [type=string_type, input_value=[{'type': 'text', 'text':...nUl0gLU7A25AHxtQ82MW'}}], input_type=list]
+    For further information visit https://errors.pydantic.dev/2.12/v/string_type
