@@ -8,7 +8,7 @@ import { saveAttempt } from '../api';
 export const QuizCard = ({ quiz, onClose, embedded = false, initialMode = 'quiz', initialAnswers = {}, onQuizCompleted }) => {
     // Mode state: 'preview' (summary), 'quiz' (active), 'review' (results)
     // If initialMode is 'review', skip straight to results.
-    const [isQuizMode, setIsQuizMode] = useState(false);
+    const [isQuizMode, setIsQuizMode] = useState(initialMode === 'review');
 
     // Quiz State
     // Initialize state lazily to respect initial props on mount
