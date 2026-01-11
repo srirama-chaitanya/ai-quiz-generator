@@ -12,7 +12,6 @@ export const QuizCard = ({ quiz, onClose, embedded = false, initialMode = 'quiz'
 
     // Quiz State
     // Initialize state lazily to respect initial props on mount
-    const [isQuizMode, setIsQuizMode] = useState(initialMode === 'review');
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [userAnswers, setUserAnswers] = useState(initialAnswers);
     const [showResults, setShowResults] = useState(initialMode === 'review');
