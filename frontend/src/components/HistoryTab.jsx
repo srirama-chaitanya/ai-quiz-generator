@@ -106,10 +106,11 @@ export const HistoryTab = ({ history, dataLoaded, onLoadNeeded }) => {
                                     {quiz.last_answers && (
                                         <button
                                             onClick={() => handleReview(quiz)}
-                                            className="p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                                            className="flex items-center gap-2 px-3 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 hover:text-indigo-600 rounded-lg font-medium text-sm transition-colors"
                                             title="Review Results"
                                         >
-                                            <Eye className="w-5 h-5" />
+                                            <Eye className="w-4 h-4" />
+                                            Review
                                         </button>
                                     )}
                                     <button
