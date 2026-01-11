@@ -10,6 +10,21 @@ function App() {
     const [currentQuiz, setCurrentQuiz] = useState(null);
     const [loading, setLoading] = useState(false);
 
+    // History State (Cache)
+    const [history, setHistory] = useState([]);
+    const [historyLoaded, setHistoryLoaded] = useState(false);
+
+    const refreshHistory = async () => {
+        try {
+            const { getHistory } = await import('./api');
+            const data = await getHistory();
+            setHistory(data);
+            setHistoryLoaded(true);
+        } catch (error) {
+            console.error("Failed to load history:", error);
+        }
+    };
+
     return (
         <div className="min-h-screen bg-gray-50 font-sans text-gray-900 selection:bg-indigo-100 selection:text-indigo-900">
             <nav className="bg-white border-b border-gray-100 sticky top-0 z-40 bg-opacity-80 backdrop-blur-md">
@@ -48,9 +63,19 @@ function App() {
 
             <main className="py-12">
                 {activeTab === 'generate' ? (
-                    <GenerateTab quiz={currentQuiz} setQuiz={setCurrentQuiz} loading={loading} setLoading={setLoading} />
+                    <GenerateTab
+                        quiz={currentQuiz}
+                        setQuiz={setCurrentQuiz}
+                        loading={loading}
+                        setLoading={setLoading}
+                        onQuizGenerated={refreshHistory}
+                    />
                 ) : (
-                    <HistoryTab />
+                    <HistoryTab
+                        history={history}
+                        dataLoaded={historyLoaded}
+                        onLoadNeeded={refreshHistory}
+                    />
                 )}
             </main>
         </div>

@@ -1,31 +1,33 @@
 import React, { useEffect, useState } from 'react';
-import { getHistory } from '../api';
 import { QuizCard } from './QuizCard';
-import { Calendar, ChevronRight, Search } from 'lucide-react';
+import { Calendar, ChevronRight, Search, Play, Eye, RotateCcw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export const HistoryTab = () => {
-    const [quizzes, setQuizzes] = useState([]);
+export const HistoryTab = ({ history, dataLoaded, onLoadNeeded }) => {
     const [selectedQuiz, setSelectedQuiz] = useState(null);
+    const [reviewMode, setReviewMode] = useState(false); // true = review mode (see answers), false = new attempt
     const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
-        loadHistory();
-    }, []);
-
-    const loadHistory = async () => {
-        try {
-            const data = await getHistory();
-            setQuizzes(data);
-        } catch (error) {
-            console.error(error);
+        if (!dataLoaded) {
+            onLoadNeeded();
         }
-    };
+    }, [dataLoaded, onLoadNeeded]);
 
-    const filteredQuizzes = quizzes.filter(q =>
+    const filteredQuizzes = history.filter(q =>
         q.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         q.url.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    const handleStart = (quiz) => {
+        setSelectedQuiz(quiz);
+        setReviewMode(false);
+    };
+
+    const handleReview = (quiz) => {
+        setSelectedQuiz(quiz);
+        setReviewMode(true);
+    };
 
     return (
         <div className="max-w-6xl mx-auto px-4">
@@ -48,23 +50,34 @@ export const HistoryTab = () => {
                     <thead className="bg-gray-50 text-gray-500 text-xs uppercase font-semibold">
                         <tr>
                             <th className="px-6 py-4">Article Title</th>
-                            <th className="px-6 py-4">URL</th>
+                            <th className="px-6 py-4 text-center">Last Score</th>
                             <th className="px-6 py-4">Date</th>
-                            <th className="px-6 py-4 text-right">Action</th>
+                            <th className="px-6 py-4 text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
                         {filteredQuizzes.length === 0 ? (
                             <tr>
                                 <td colSpan={4} className="px-6 py-8 text-center text-gray-400">
-                                    No quizzes found in history.
+                                    {dataLoaded ? "No quizzes found in history." : "Loading..."}
                                 </td>
                             </tr>
                         ) : (
                             filteredQuizzes.map((quiz) => (
                                 <tr key={quiz.id} className="hover:bg-gray-50 transition-colors group">
-                                    <td className="px-6 py-4 font-medium text-gray-900">{quiz.title}</td>
-                                    <td className="px-6 py-4 text-gray-500 truncate max-w-xs">{quiz.url}</td>
+                                    <td className="px-6 py-4 font-medium text-gray-900">
+                                        <div className="truncate max-w-xs">{quiz.title}</div>
+                                        <div className="text-xs text-gray-400 truncate max-w-xs">{quiz.url}</div>
+                                    </td>
+                                    <td className="px-6 py-4 text-center">
+                                        {quiz.last_score !== null && quiz.last_score !== undefined ? (
+                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                {quiz.last_score} / {quiz.questions.length}
+                                            </span>
+                                        ) : (
+                                            <span className="text-gray-400 text-xs">-</span>
+                                        )}
+                                    </td>
                                     <td className="px-6 py-4 text-gray-400 text-sm">
                                         <div className="flex items-center gap-2">
                                             <Calendar className="w-4 h-4" />
@@ -72,12 +85,26 @@ export const HistoryTab = () => {
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 text-right">
-                                        <button
-                                            onClick={() => setSelectedQuiz(quiz)}
-                                            className="text-indigo-600 hover:text-indigo-800 font-medium text-sm inline-flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                                        >
-                                            Details <ChevronRight className="w-4 h-4" />
-                                        </button>
+                                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            {quiz.last_answers && (
+                                                <button
+                                                    onClick={() => handleReview(quiz)}
+                                                    className="inline-flex items-center gap-1 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-md transition-colors"
+                                                    title="Review Past Performance"
+                                                >
+                                                    <Eye className="w-3.5 h-3.5" />
+                                                    Review
+                                                </button>
+                                            )}
+                                            <button
+                                                onClick={() => handleStart(quiz)}
+                                                className="inline-flex items-center gap-1 text-xs font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-md transition-colors"
+                                                title={quiz.last_answers ? "Re-attempt Quiz" : "Start Quiz"}
+                                            >
+                                                {quiz.last_answers ? <RotateCcw className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+                                                {quiz.last_answers ? "Retry" : "Start"}
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))
@@ -102,7 +129,13 @@ export const HistoryTab = () => {
                             className="w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-xl bg-white shadow-2xl"
                             onClick={e => e.stopPropagation()}
                         >
-                            <QuizCard quiz={selectedQuiz} onClose={() => setSelectedQuiz(null)} embedded />
+                            <QuizCard
+                                quiz={selectedQuiz}
+                                onClose={() => setSelectedQuiz(null)}
+                                embedded
+                                initialMode={reviewMode ? 'review' : 'quiz'}
+                                initialAnswers={reviewMode && selectedQuiz.last_answers ? JSON.parse(selectedQuiz.last_answers) : {}}
+                            />
                         </motion.div>
                     </motion.div>
                 )}

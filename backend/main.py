@@ -148,6 +148,24 @@ def get_quiz(quiz_id: int, session: Session = Depends(get_session)):
         raise HTTPException(status_code=404, detail="Quiz not found")
     return quiz
 
+class AttemptRequest(BaseModel):
+    score: int
+    answers: dict # {question_id: option_text}
+
+@app.post("/api/quiz/{quiz_id}/attempt")
+def save_attempt(quiz_id: int, attempt: AttemptRequest, session: Session = Depends(get_session)):
+    quiz = session.get(Quiz, quiz_id)
+    if not quiz:
+        raise HTTPException(status_code=404, detail="Quiz not found")
+    
+    import json
+    quiz.last_score = attempt.score
+    quiz.last_answers = json.dumps(attempt.answers)
+    
+    session.add(quiz)
+    session.commit()
+    return {"status": "success", "score": quiz.last_score}
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

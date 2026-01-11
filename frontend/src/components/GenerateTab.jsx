@@ -3,7 +3,7 @@ import { generateQuiz } from '../api';
 import { QuizCard } from './QuizCard';
 import { Sparkles, Loader2, AlertCircle } from 'lucide-react';
 
-export const GenerateTab = ({ quiz, setQuiz, loading, setLoading }) => {
+export const GenerateTab = ({ quiz, setQuiz, loading, setLoading, onQuizGenerated }) => {
     const [url, setUrl] = useState('');
     // const [loading, setLoading] = useState(false); // lifted to App
     const [error, setError] = useState(null);
@@ -19,6 +19,7 @@ export const GenerateTab = ({ quiz, setQuiz, loading, setLoading }) => {
         try {
             const data = await generateQuiz(url);
             setQuiz(data);
+            if (onQuizGenerated) onQuizGenerated();
         } catch (err) {
             setError(err.response?.data?.detail || "Failed to generate quiz. Please check the URL.");
         } finally {

@@ -16,3 +16,8 @@ export const getQuiz = async (id) => {
     const response = await axios.get(`${API_BASE_URL}/quiz/${id}`);
     return response.data;
 };
+
+export const saveAttempt = async (id, score, answers) => {
+    const response = await axios.post(`${API_BASE_URL}/quiz/${id}/attempt`, { score, answers });
+    return response.data;
+};

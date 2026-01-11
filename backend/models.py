@@ -7,6 +7,9 @@ class QuizBase(SQLModel):
     title: str
     summary: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
+    # Store the latest attempt
+    last_score: Optional[int] = Field(default=None)
+    last_answers: Optional[str] = Field(default=None) # JSON string of user answers {question_id: option_text}
 
 class Quiz(QuizBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)

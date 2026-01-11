@@ -1,87 +1,47 @@
-import React, { useState } from 'react';
-import { CheckCircle, XCircle, BookOpen, User, Building, MapPin, Tag, Play, Award, RotateCcw, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { CheckCircle, XCircle, ArrowRight, BookOpen, AlertCircle, Share2, HelpCircle, User, Building, MapPin, Tag, Play, Award, RotateCcw } from 'lucide-react';
 import { clsx } from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
+import { saveAttempt } from '../api';
 
-export const QuizCard = ({ quiz, onClose, embedded = false }) => {
+export const QuizCard = ({ quiz, onClose, embedded = false, initialMode = 'quiz', initialAnswers = {} }) => {
+    // Mode state: 'preview' (summary), 'quiz' (active), 'review' (results)
+    // If initialMode is 'review', skip straight to results.
     const [isQuizMode, setIsQuizMode] = useState(false);
-    const [userAnswers, setUserAnswers] = useState({}); // { questionId: optionText }
-    const [showResults, setShowResults] = useState(false);
+
+    // Quiz State
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+    const [userAnswers, setUserAnswers] = useState(initialAnswers);
+    const [showResults, setShowResults] = useState(initialMode === 'review');
+    const [score, setScore] = useState(0);
+
+    // Initialize state based on mode
+    useEffect(() => {
+        if (initialMode === 'review') {
+            setIsQuizMode(true); // Technically inside the "quiz view" wrapper
+            setShowResults(true);
+            // Calculate score for display
+            let s = 0;
+            quiz.questions.forEach(q => {
+                if (initialAnswers[q.id] === q.correct_answer) s++;
+            });
+            setScore(s);
+        } else {
+            // Default: Show preview, clean state
+            setIsQuizMode(false);
+            setShowResults(false);
+            setUserAnswers({});
+            setScore(0);
+        }
+    }, [initialMode, initialAnswers, quiz]);
 
     const handleStartQuiz = () => {
         setIsQuizMode(true);
         setShowResults(false);
         setUserAnswers({});
         setCurrentQuestionIndex(0);
-    };
-
-    const handleAnswerSelect = (questionId, optionText) => {
-        setUserAnswers(prev => ({
-            ...prev,
-            [questionId]: optionText
-        }));
-
-        // Auto-advance or Auto-submit
-        setTimeout(() => {
-            if (currentQuestionIndex < quiz.questions.length - 1) {
-                setCurrentQuestionIndex(prev => prev + 1);
-            } else {
-                handleSubmitQuiz();
-            }
-        }, 700);
-    };
-
-    const handleSubmitQuiz = () => {
-        setShowResults(true);
-        // Defer score calculation to render cycle or recalculate
-        // We need to use the state, but inside handleAnswerSelect set state might not be flushed yet if we called this immediately. 
-        // But since we use setTimeout 700ms, state should be updated.
-        // Let's rely on the userAnswers state which should be updated.
-        // Actually, we need to calculate score inside render or use a fresh calculation.
-        // The calculateScore function uses userAnswers which is state.
-
-        // Trigger confetti if perfect score
-        // We need to calculate score based on the *latest* update. 
-        // Since we are inside a timeout, userAnswers *might* be stale if we closed over it? 
-        // No, userAnswers in the component scope will be stale in the closure of the render where handleAnswerSelect was defined.
-        // We should move confetti logic to a useEffect or recalculate explicitly.
-        // For simplicity, I will just set showResults(true) and let the effect handle it or just run it. 
-        // Ideally we check score in useEffect when showResults becomes true.
-    };
-
-    // Watch for results to trigger confetti
-    React.useEffect(() => {
-        if (showResults) {
-            const score = quiz.questions.reduce((acc, q) => {
-                return acc + (userAnswers[q.id] === q.correct_answer ? 1 : 0);
-            }, 0);
-
-            if (score === quiz.questions.length) {
-                confetti({
-                    particleCount: 100,
-                    spread: 70,
-                    origin: { y: 0.6 }
-                });
-            }
-        }
-    }, [showResults, quiz, userAnswers]);
-
-    const calculateScore = () => {
-        let score = 0;
-        quiz.questions.forEach(q => {
-            if (userAnswers[q.id] === q.correct_answer) {
-                score++;
-            }
-        });
-        return score;
-    };
-
-    const handleRetake = () => {
-        setShowResults(false);
-        setUserAnswers({});
-        setCurrentQuestionIndex(0);
+        setScore(0);
     };
 
     const handleExitQuizMode = () => {
@@ -90,6 +50,53 @@ export const QuizCard = ({ quiz, onClose, embedded = false }) => {
         setUserAnswers({});
     };
 
+    const handleAnswerSelect = (questionId, optionText) => {
+        if (showResults) return; // Read-only in review
+
+        const newAnswers = { ...userAnswers, [questionId]: optionText };
+        setUserAnswers(newAnswers);
+
+        // Auto-advance
+        if (currentQuestionIndex < quiz.questions.length - 1) {
+            setTimeout(() => setCurrentQuestionIndex(prev => prev + 1), 400);
+        }
+    };
+
+    const handleSubmitQuiz = async () => {
+        // Calculate Score
+        let newScore = 0;
+        quiz.questions.forEach(q => {
+            if (userAnswers[q.id] === q.correct_answer) newScore++;
+        });
+        setScore(newScore);
+        setShowResults(true);
+
+        // Save Attempt
+        try {
+            await saveAttempt(quiz.id, newScore, userAnswers);
+        } catch (err) {
+            console.error("Failed to save attempt", err);
+        }
+    };
+
+    const handleRetake = () => {
+        setShowResults(false);
+        setUserAnswers({});
+        setCurrentQuestionIndex(0);
+    };
+
+    // Confetti on perfect score
+    useEffect(() => {
+        if (showResults && score === quiz.questions.length && initialMode !== 'review') {
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 }
+            });
+        }
+    }, [showResults, score, quiz.questions.length, initialMode]);
+
+    // -- RENDER: QUIZ / RESULTS MODE --
     if (isQuizMode) {
         return (
             <div className={clsx("bg-white rounded-xl shadow-xl overflow-hidden text-left flex flex-col", embedded ? "h-full" : "max-w-4xl w-full mx-auto my-8")}>
@@ -97,29 +104,26 @@ export const QuizCard = ({ quiz, onClose, embedded = false }) => {
                 <div className="p-4 bg-indigo-600 text-white flex justify-between items-center shadow-md z-10 sticky top-0">
                     <h2 className="font-bold text-lg flex items-center gap-2">
                         <Award className="w-5 h-5" />
-                        Quiz Mode: {quiz.title}
+                        {showResults ? "Quiz Results" : `Question ${currentQuestionIndex + 1}/${quiz.questions.length}`}
                     </h2>
-                    <button onClick={handleExitQuizMode} className="text-indigo-200 hover:text-white text-sm">
+                    <button onClick={handleExitQuizMode} className="text-indigo-200 hover:text-white text-sm bg-white/10 px-3 py-1 rounded-full transition-colors">
                         Exit
                     </button>
                 </div>
 
                 {!showResults ? (
-                    <div className="w-full bg-gray-50 pb-12">
-                        <div className="flex flex-col items-center p-6 md:p-8">
+                    // ACTIVE QUIZ INTERFACE
+                    <div className="w-full bg-gray-50 flex-1 overflow-y-auto">
+                        <div className="flex flex-col items-center p-6 md:p-8 min-h-[500px]">
                             {/* Progress Bar */}
                             <div className="w-full max-w-2xl mb-8">
-                                <div className="flex justify-between text-sm text-gray-500 mb-2">
-                                    <span>Question {currentQuestionIndex + 1} of {quiz.questions.length}</span>
-                                    <span>{Math.round(((currentQuestionIndex + 1) / quiz.questions.length) * 100)}%</span>
-                                </div>
                                 <div className="w-full bg-gray-200 rounded-full h-2.5">
-                                    <div className="bg-indigo-600 h-2.5 rounded-full transition-all duration-300" style={{ width: `${((currentQuestionIndex + 1) / quiz.questions.length) * 100}%` }}></div>
+                                    <div className="bg-indigo-600 h-2.5 rounded-full transition-all duration-300" style={{ width: `${((currentQuestionIndex + 1) / quiz.questions.length) * 100}% ` }}></div>
                                 </div>
                             </div>
 
                             {/* Question Card */}
-                            <div className="w-full max-w-2xl bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+                            <div className="w-full max-w-2xl bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex-1">
                                 <div className="mb-6">
                                     <span className={clsx(
                                         "inline-block px-3 py-1 rounded-full text-xs font-bold uppercase mb-3",
@@ -173,80 +177,82 @@ export const QuizCard = ({ quiz, onClose, embedded = false }) => {
                                 {currentQuestionIndex < quiz.questions.length - 1 ? (
                                     <button
                                         onClick={() => setCurrentQuestionIndex(prev => prev + 1)}
-                                        // disabled={!userAnswers[quiz.questions[currentQuestionIndex].id]} // Optional: force answer
                                         className="px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-2"
                                     >
-                                        Next <ChevronRight className="w-4 h-4" />
+                                        Next <ArrowRight className="w-4 h-4" />
                                     </button>
                                 ) : (
                                     <button
                                         onClick={handleSubmitQuiz}
                                         className="px-8 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all font-bold flex items-center gap-2"
                                     >
-                                        Submit Quiz <Award className="w-4 h-4" />
+                                        Submit <CheckCircle className="w-4 h-4" />
                                     </button>
                                 )}
                             </div>
                         </div>
                     </div>
                 ) : (
+                    // RESULTS / REVIEW INTERFACE
                     <div className="flex-1 p-6 md:p-8 overflow-y-auto bg-gray-50">
-                        {/* Results View */}
                         <div className="max-w-3xl mx-auto">
+                            {/* Score Card */}
                             <div className="bg-white rounded-2xl p-8 mb-8 shadow-sm border border-gray-100 text-center">
-                                <h3 className="text-gray-500 font-medium mb-2">Your Score</h3>
+                                <h3 className="text-gray-500 font-medium mb-2">{initialMode === 'review' ? "Historical Score" : "Your Score"}</h3>
                                 <div className="text-5xl font-extrabold text-indigo-600 mb-2">
-                                    {calculateScore()} <span className="text-gray-300 text-3xl">/ {quiz.questions.length}</span>
+                                    {score} <span className="text-gray-300 text-3xl">/ {quiz.questions.length}</span>
                                 </div>
                                 <p className="text-gray-600">
-                                    {calculateScore() === quiz.questions.length ? "Perfect score! Outstanding!" :
-                                        calculateScore() > quiz.questions.length / 2 ? "Great job! Keep learning." : "Good effort! Review the answers below."}
+                                    {score === quiz.questions.length ? "Perfect score! Outstanding!" :
+                                        score > quiz.questions.length / 2 ? "Great job! Keep learning." : "Good effort! Review the answers below."}
                                 </p>
                                 <div className="flex justify-center gap-4 mt-6">
-                                    <button onClick={handleRetake} className="px-4 py-2 text-indigo-600 hover:bg-indigo-50 rounded-lg font-medium flex items-center gap-2 transition-colors">
+                                    <button onClick={handleRetake} className="px-5 py-2.5 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg font-bold flex items-center gap-2 transition-colors">
                                         <RotateCcw className="w-4 h-4" /> Retake Quiz
                                     </button>
-                                    <button onClick={handleExitQuizMode} className="px-4 py-2 bg-gray-900 text-white hover:bg-gray-800 rounded-lg font-medium transition-colors">
-                                        Exit to Review
+                                    <button onClick={handleExitQuizMode} className="px-5 py-2.5 bg-gray-900 text-white hover:bg-gray-800 rounded-lg font-medium transition-colors">
+                                        Exit
                                     </button>
                                 </div>
                             </div>
 
-                            <div className="space-y-6">
+                            {/* Answers List */}
+                            <div className="space-y-6 pb-12">
                                 {quiz.questions.map((q, idx) => {
                                     const userAnswer = userAnswers[q.id];
                                     const isCorrect = userAnswer === q.correct_answer;
-                                    // If unattempted, treat as incorrect
                                     const isUnanswered = !userAnswer;
 
                                     return (
-                                        <div key={idx} className={clsx("bg-white rounded-xl p-6 border shadow-sm", isCorrect ? "border-green-100" : "border-red-100")}>
+                                        <div key={idx} className={clsx("bg-white rounded-xl p-6 border shadow-sm transition-all", isCorrect ? "border-green-100 hover:border-green-200" : "border-red-100 hover:border-red-200")}>
                                             <div className="flex gap-3 mb-4">
-                                                <div className="mt-1">
+                                                <div className="mt-1 flex-shrink-0">
                                                     {isCorrect ? <CheckCircle className="w-6 h-6 text-green-500" /> : <XCircle className="w-6 h-6 text-red-500" />}
                                                 </div>
-                                                <div>
-                                                    <h4 className="font-bold text-gray-900 text-lg mb-1">{q.text}</h4>
-                                                    <div className="text-sm">
+                                                <div className="flex-1">
+                                                    <h4 className="font-bold text-gray-900 text-lg mb-2">{q.text}</h4>
+                                                    <div className="text-sm space-y-1">
                                                         {isUnanswered ? (
-                                                            <span className="text-orange-500 font-medium">Not Answered</span>
+                                                            <div className="flex items-center gap-2 text-orange-500 font-medium bg-orange-50 px-3 py-1 rounded-md w-fit">
+                                                                <AlertCircle className="w-4 h-4" /> Not Answered
+                                                            </div>
                                                         ) : (
-                                                            <span className={isCorrect ? "text-green-600 font-medium" : "text-red-500 font-medium"}>
+                                                            <div className={clsx("font-medium px-3 py-1 rounded-md w-fit", isCorrect ? "text-green-700 bg-green-50" : "text-red-700 bg-red-50")}>
                                                                 Your Answer: {userAnswer}
-                                                            </span>
+                                                            </div>
                                                         )}
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            <div className="pl-9 space-y-2">
-                                                <div className="p-3 bg-gray-50 rounded-lg text-sm">
+                                            <div className="pl-9 space-y-3">
+                                                <div className="p-3 bg-gray-50 rounded-lg text-sm border border-gray-100">
                                                     <span className="font-bold text-gray-700 mr-2">Correct Answer:</span>
-                                                    <span className="text-green-700 font-medium">{q.correct_answer}</span>
+                                                    <span className="text-green-700 font-bold">{q.correct_answer}</span>
                                                 </div>
-                                                <p className="text-gray-600 text-sm italic">
-                                                    <span className="font-medium mr-1">Explanation:</span>
-                                                    {q.explanation}
+                                                <p className="text-gray-600 text-sm flex gap-2">
+                                                    <HelpCircle className="w-4 h-4 text-indigo-400 flex-shrink-0 mt-0.5" />
+                                                    <span>{q.explanation}</span>
                                                 </p>
                                             </div>
                                         </div>
@@ -255,12 +261,12 @@ export const QuizCard = ({ quiz, onClose, embedded = false }) => {
                             </div>
                         </div>
                     </div>
-                )
-                }
-            </div >
+                )}
+            </div>
         );
     }
 
+    // -- RENDER: PREVIEW CARD MODE (Summary etc) --
     return (
         <div className={clsx("bg-white rounded-xl shadow-xl overflow-hidden text-left", embedded ? "h-full" : "max-w-4xl w-full mx-auto my-8")}>
             <div className="p-6 bg-gradient-to-r from-indigo-600 to-purple-600 text-white relative">
