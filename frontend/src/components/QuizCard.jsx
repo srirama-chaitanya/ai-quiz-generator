@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { saveAttempt } from '../api';
 
-export const QuizCard = ({ quiz, onClose, embedded = false, initialMode = 'quiz', initialAnswers = {} }) => {
+export const QuizCard = ({ quiz, onClose, embedded = false, initialMode = 'quiz', initialAnswers = {}, onQuizCompleted }) => {
     // Mode state: 'preview' (summary), 'quiz' (active), 'review' (results)
     // If initialMode is 'review', skip straight to results.
     const [isQuizMode, setIsQuizMode] = useState(false);
@@ -83,6 +83,7 @@ export const QuizCard = ({ quiz, onClose, embedded = false, initialMode = 'quiz'
         // Save Attempt
         try {
             await saveAttempt(quiz.id, newScore, userAnswers);
+            if (onQuizCompleted) onQuizCompleted(); // Refresh history immediately
         } catch (err) {
             console.error("Failed to save attempt", err);
         }
