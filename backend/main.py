@@ -166,6 +166,18 @@ def save_attempt(quiz_id: int, attempt: AttemptRequest, session: Session = Depen
     session.commit()
     return {"status": "success", "score": quiz.last_score}
 
+# DEBUG ENDPOINT - DELETE BEFORE PROD IF NEEDED
+# Since Render Free Tier has no shell, we use this to migrate the DB.
+@app.get("/api/debug/reset_db")
+def debug_reset_db():
+    from sqlmodel import SQLModel
+    from database import engine
+    from models import Quiz, Question, Option, KeyEntity, Section, RelatedTopic
+    
+    SQLModel.metadata.drop_all(engine)
+    SQLModel.metadata.create_all(engine)
+    return {"status": "Database successfully reset! You can now use the app."}
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
