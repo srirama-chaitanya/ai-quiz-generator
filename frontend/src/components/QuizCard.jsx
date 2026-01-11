@@ -42,6 +42,7 @@ export const QuizCard = ({ quiz, onClose, embedded = false, initialMode = 'quiz'
         setUserAnswers({});
         setCurrentQuestionIndex(0);
         setScore(0);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const handleExitQuizMode = () => {
@@ -118,28 +119,30 @@ export const QuizCard = ({ quiz, onClose, embedded = false, initialMode = 'quiz'
                             {/* Progress Bar */}
                             <div className="w-full max-w-2xl mb-8">
                                 <div className="w-full bg-gray-200 rounded-full h-2.5">
-                                    <div className="bg-indigo-600 h-2.5 rounded-full transition-all duration-300" style={{ width: `${((currentQuestionIndex + 1) / quiz.questions.length) * 100}% ` }}></div>
+                                    <div className="bg-indigo-600 h-2.5 rounded-full transition-all duration-300" style={{ width: `${((currentQuestionIndex + 1) / quiz.questions.length) * 100}%` }}></div>
                                 </div>
                             </div>
 
                             {/* Question Card */}
                             <div className="w-full max-w-2xl bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex-1">
-                                <div className="mb-6">
-                                    <span className={clsx(
-                                        "inline-block px-3 py-1 rounded-full text-xs font-bold uppercase mb-3",
-                                        quiz.questions[currentQuestionIndex].difficulty === 'easy' ? "bg-green-100 text-green-700" :
-                                            quiz.questions[currentQuestionIndex].difficulty === 'medium' ? "bg-yellow-100 text-yellow-700" :
-                                                "bg-red-100 text-red-700"
-                                    )}>
-                                        {quiz.questions[currentQuestionIndex].difficulty}
-                                    </span>
-                                    <h3 className="text-xl md:text-2xl font-bold text-gray-800">
-                                        {quiz.questions[currentQuestionIndex].text}
-                                    </h3>
-                                </div>
+                                {quiz.questions[currentQuestionIndex] && (
+                                    <div className="mb-6">
+                                        <span className={clsx(
+                                            "inline-block px-3 py-1 rounded-full text-xs font-bold uppercase mb-3",
+                                            quiz.questions[currentQuestionIndex].difficulty === 'easy' ? "bg-green-100 text-green-700" :
+                                                quiz.questions[currentQuestionIndex].difficulty === 'medium' ? "bg-yellow-100 text-yellow-700" :
+                                                    "bg-red-100 text-red-700"
+                                        )}>
+                                            {quiz.questions[currentQuestionIndex].difficulty}
+                                        </span>
+                                        <h3 className="text-xl md:text-2xl font-bold text-gray-800">
+                                            {quiz.questions[currentQuestionIndex].text}
+                                        </h3>
+                                    </div>
+                                )}
 
                                 <div className="space-y-3">
-                                    {quiz.questions[currentQuestionIndex].options.map((opt, idx) => (
+                                    {quiz.questions[currentQuestionIndex]?.options.map((opt, idx) => (
                                         <button
                                             key={idx}
                                             onClick={() => handleAnswerSelect(quiz.questions[currentQuestionIndex].id, opt.text)}
@@ -296,7 +299,8 @@ export const QuizCard = ({ quiz, onClose, embedded = false, initialMode = 'quiz'
                     <p className="text-indigo-700 mb-6">This quiz contains {quiz.questions?.length || 0} questions ranging from easy to hard.</p>
                     <button
                         onClick={handleStartQuiz}
-                        className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-full font-bold shadow-lg shadow-indigo-200 transition-all hover:scale-105"
+                        disabled={!quiz.questions || quiz.questions.length === 0}
+                        className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-full font-bold shadow-lg shadow-indigo-200 transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <Play className="w-5 h-5 fill-current" />
                         Start Quiz Mode

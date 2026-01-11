@@ -88,7 +88,7 @@ export const GenerateTab = ({ quiz, setQuiz, loading, setLoading, onQuizGenerate
                             &larr; Generate Another
                         </button>
                     </div>
-                    <QuizCard quiz={quiz} />
+                    <QuizCard key={quiz.id || 'generated'} quiz={quiz} />
                 </div>
             )}
         </div>
